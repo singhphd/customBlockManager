@@ -18,7 +18,6 @@
 namespace APP\plugins\generic\customBlockManager\controllers\grid\form;
 
 use APP\plugins\generic\customBlockManager\CustomBlockPlugin;
-use APP\plugins\generic\customBlockManager\CustomBlockManagerPlugin;
 use APP\template\TemplateManager;
 use Illuminate\Support\Str;
 use PKP\facades\Locale;
@@ -33,19 +32,17 @@ class CustomBlockForm extends Form
 
     public ?CustomBlockPlugin $plugin;
 
-    public ?CustomBlockManagerPlugin $customBlockManagerPlugin;
     /**
      * Constructor
      *
      * @param string $template the path to the form template file
      */
-    public function __construct(string $template, ?int $contextId, ?CustomBlockPlugin $plugin, ?CustomBlockManagerPlugin $customBlockManagerPlugin)
+    public function __construct(string $template, ?int $contextId, ?CustomBlockPlugin $plugin)
     {
         parent::__construct($template);
 
         $this->contextId = $contextId;
         $this->plugin = $plugin;
-        $this->customBlockManagerPlugin = $customBlockManagerPlugin;
 
         // Add form checks
         $this->addCheck(new \PKP\form\validation\FormValidatorPost($this));
@@ -100,17 +97,19 @@ class CustomBlockForm extends Form
 
             // Add the custom block to the list of the custom block plugins in the
             // custom block manager plugin
-            $blocks = $this->customBlockManagerPlugin->getSetting($contextId, 'blocks') ?? [];
+            /** @var \APP\plugins\generic\customBlockManager\CustomBlockManagerPlugin */
+            $customBlockManagerPlugin = PluginRegistry::getPlugin('generic', CUSTOMBLOCKMANAGER_PLUGIN_NAME);
+            $blocks = $customBlockManagerPlugin->getSetting($contextId, 'blocks') ?? [];
 
             $blockName = preg_replace('[^a-z0-9\-\_.]', '', Str::of($this->getData('blockTitle')[$locale])->lower()->kebab());
             if (in_array($blockName, $blocks)) {
                 $blockName = uniqid($blockName);
             }
             $blocks[] = (string) $blockName;
-            $this->customBlockManagerPlugin->updateSetting($contextId, 'blocks', $blocks);
+            $customBlockManagerPlugin->updateSetting($contextId, 'blocks', $blocks);
 
             // Create a new custom block plugin
-            $plugin = new CustomBlockPlugin($blockName, $this->customBlockManagerPlugin);
+            $plugin = new CustomBlockPlugin($blockName, $customBlockManagerPlugin);
             // Default the block to being enabled
             $plugin->setEnabled(true);
         }
@@ -122,4 +121,8 @@ class CustomBlockForm extends Form
 
         parent::execute(...$functionArgs);
     }
+}
+
+if (!PKP_STRICT_MODE) {
+    class_alias('\APP\plugins\generic\customBlockManager\controllers\grid\form\CustomBlockForm', '\CustomBlockForm');
 }

@@ -18,7 +18,6 @@ namespace APP\plugins\generic\customBlockManager\controllers\grid;
 
 use APP\core\Application;
 use APP\plugins\generic\customBlockManager\controllers\grid\form\CustomBlockForm;
-use APP\plugins\generic\customBlockManager\CustomBlockManagerPlugin;
 use APP\plugins\generic\customBlockManager\CustomBlockPlugin;
 use PKP\controllers\grid\GridColumn;
 use PKP\controllers\grid\GridHandler;
@@ -42,14 +41,14 @@ class CustomBlockGridHandler extends GridHandler
     /**
      * Constructor
      */
-    public function __construct(CustomBlockManagerPlugin $plugin)
+    public function __construct()
     {
         parent::__construct();
         $this->addRoleAssignment(
             [Role::ROLE_ID_MANAGER, Role::ROLE_ID_SITE_ADMIN],
             ['fetchGrid', 'fetchRow', 'addCustomBlock', 'editCustomBlock', 'updateCustomBlock', 'deleteCustomBlock']
         );
-        $this->plugin = $plugin;
+        $this->plugin = PluginRegistry::getPlugin('generic', CUSTOMBLOCKMANAGER_PLUGIN_NAME);
     }
 
 
@@ -169,12 +168,13 @@ class CustomBlockGridHandler extends GridHandler
         // If this is the edit of the existing custom block plugin,
         if ($blockName) {
             // Create the custom block plugin
-            $customBlockPlugin = new CustomBlockPlugin($blockName, $this->plugin);
+            $customBlockPlugin = new CustomBlockPlugin($blockName, CUSTOMBLOCKMANAGER_PLUGIN_NAME);
         }
 
         // Create and present the edit form
-        $template = $this->plugin->getTemplateResource('editCustomBlockForm.tpl');
-        $customBlockForm = new CustomBlockForm($template, $contextId, $customBlockPlugin, $this->plugin);
+        $customBlockManagerPlugin = $this->plugin;
+        $template = $customBlockManagerPlugin->getTemplateResource('editCustomBlockForm.tpl');
+        $customBlockForm = new CustomBlockForm($template, $contextId, $customBlockPlugin);
         $customBlockForm->initData();
         return new JSONMessage(true, $customBlockForm->fetch($request));
     }
@@ -198,13 +198,13 @@ class CustomBlockGridHandler extends GridHandler
         // If this was the edit of the existing custom block plugin
         if ($pluginName) {
             // Create the custom block plugin
-            $customBlockPlugin = new CustomBlockPlugin($pluginName, $this->plugin);
+            $customBlockPlugin = new CustomBlockPlugin($pluginName, CUSTOMBLOCKMANAGER_PLUGIN_NAME);
         }
 
         // Create and populate the form
         $customBlockManagerPlugin = $this->plugin;
         $template = $customBlockManagerPlugin->getTemplateResource('editCustomBlockForm.tpl');
-        $customBlockForm = new CustomBlockForm($template, $contextId, $customBlockPlugin, $this->plugin);
+        $customBlockForm = new CustomBlockForm($template, $contextId, $customBlockPlugin);
         $customBlockForm->readInputData();
 
         // Check the results
@@ -251,4 +251,8 @@ class CustomBlockGridHandler extends GridHandler
         $customBlockManagerPlugin->updateSetting($contextId, 'blocks', $newBlocks);
         return DAO::getDataChangedEvent();
     }
+}
+
+if (!PKP_STRICT_MODE) {
+    class_alias('\APP\plugins\generic\customBlockManager\controllers\grid\CustomBlockGridHandler', '\CustomBlockGridHandler');
 }

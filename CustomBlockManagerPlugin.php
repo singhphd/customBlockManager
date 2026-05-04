@@ -103,9 +103,8 @@ class CustomBlockManagerPlugin extends GenericPlugin
     public function setupGridHandler($hookName, $params)
     {
         $component = & $params[0];
-        $componentInstance = & $params[2];
         if ($component == 'plugins.generic.customBlockManager.controllers.grid.CustomBlockGridHandler') {
-            $componentInstance = new controllers\grid\CustomBlockGridHandler($this);
+            define('CUSTOMBLOCKMANAGER_PLUGIN_NAME', $this->getName());
             return true;
         }
         return false;
@@ -164,4 +163,8 @@ class CustomBlockManagerPlugin extends GenericPlugin
     {
         return !Application::get()->getRequest()->getContext();
     }
+}
+
+if (!PKP_STRICT_MODE) {
+    class_alias('\APP\plugins\generic\customBlockManager\CustomBlockManagerPlugin', '\CustomBlockManagerPlugin');
 }
