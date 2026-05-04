@@ -168,7 +168,7 @@ class CustomBlockGridHandler extends GridHandler
         // If this is the edit of the existing custom block plugin,
         if ($blockName) {
             // Create the custom block plugin
-            $customBlockPlugin = new CustomBlockPlugin($blockName, CUSTOMBLOCKMANAGER_PLUGIN_NAME);
+            $customBlockPlugin = new CustomBlockPlugin($blockName, $this->plugin);
         }
 
         // Create and present the edit form
@@ -198,7 +198,7 @@ class CustomBlockGridHandler extends GridHandler
         // If this was the edit of the existing custom block plugin
         if ($pluginName) {
             // Create the custom block plugin
-            $customBlockPlugin = new CustomBlockPlugin($pluginName, CUSTOMBLOCKMANAGER_PLUGIN_NAME);
+            $customBlockPlugin = new CustomBlockPlugin($pluginName, $this->plugin);
         }
 
         // Create and populate the form
